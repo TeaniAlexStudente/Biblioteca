@@ -72,6 +72,19 @@
       });
     }
 
+    function loadCont(Autore, Prezzo) {
+      var formBody = new URLSearchParams({ 'Autore': Autore , 'Prezzo': Prezzo});
+
+
+      let res = fetch("/api/book/cont", {
+        method: "GET",
+        body: formBody,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        }
+      });
+    }
+
     function showUpdate(x) {
       document.getElementById("demo1").innerHTML = this.responseText;
       let text1 = "<form>";
@@ -96,6 +109,13 @@
     <input type="text" class='myText' name="autore" id="autore" placeholder="Autore">
     <input type="text" class='myText' name="titolo" id="titolo" placeholder="Titolo">
     <button type="button" class="myButton" onclick="loadInsert(document.getElementById('isbn').value, document.getElementById('autore').value, document.getElementById('titolo').value)">Inserisci un libro</button>
+
+  </form>
+  <h3>Cerca un autore che abbia dei libri con prezzo inferiore a quello desiderato</h3>
+  <form>
+    <input type="text" class='myText' name="autore" id="autore" placeholder="Autore">
+    <input type="text" class='myText' name="Prezzo" id="Prezzo" placeholder="Prezzo">
+    <button type="button" class="myButton" onclick="loadCont(document.getElementById('autore').value, document.getElementById('Prezzo').value)">Cerca</button>
 
   </form>
   <p id="demo"></p>

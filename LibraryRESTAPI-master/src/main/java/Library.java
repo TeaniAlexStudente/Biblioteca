@@ -9,8 +9,8 @@ import javax.ws.rs.core.Response;
 @Path("/book")
 public class Library {
     private final String error = "Server error, contact administrators";
-    private boolean checkParams(String isbn,String autore, String titolo){
-        return (isbn == null || isbn.trim().length() == 0) || (titolo == null || titolo.trim().length() == 0) || (autore == null || autore.trim().length() == 0);
+    private boolean checkParams(String isbn,String autore, String titolo, String Prezzo){
+        return (isbn == null || isbn.trim().length() == 0) || (titolo == null || titolo.trim().length() == 0) || (autore == null || autore.trim().length() == 0) || (Prezzo == null || Prezzo.trim().length() == 0);
     }
 
     @GET
@@ -31,6 +31,8 @@ public class Library {
                 book.setTitolo(results.getString("Titolo"));
                 book.setAutore(results.getString("Autore"));
                 book.setISBN(results.getString("ISBN"));
+                book.setPrezzo(results.getString("Prezzo"));
+
                 books.add(book);
 
             }
@@ -49,8 +51,9 @@ public class Library {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response update(@FormParam("ISBN") String isbn,
                            @FormParam("Titolo")String titolo,
-                           @FormParam("Autore") String autore){
-        if(checkParams(isbn, titolo, autore)) {
+                           @FormParam("Autore") String autore,
+                           @FormParam("Prezzo") String Prezzo){
+        if(checkParams(isbn, titolo, autore, Prezzo)) {
             String obj = new Gson().toJson("Parameters must be valid");
             return Response.serverError().entity(obj).build();
         }
@@ -80,8 +83,9 @@ public class Library {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response create(@FormParam("ISBN") String isbn,
                            @FormParam("Autore") String autore,
-                           @FormParam("Titolo")String titolo){
-        if(checkParams(isbn, titolo, autore)) {
+                           @FormParam("Titolo")String titolo,
+                           @FormParam("Prezzo") String Prezzo){
+        if(checkParams(isbn, titolo, autore, Prezzo)) {
             String obj = new Gson().toJson("Parameters must be valid");
             return Response.serverError().entity(obj).build();
         }
@@ -130,5 +134,44 @@ public class Library {
         }
         String obj = new Gson().toJson("Libro con ISBN:" + isbn + " eliminato con successo");
         return Response.ok(obj,MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/cont")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response cont(@FormParam("ISBN") String isbn,
+                        @FormParam("Autore") String autore,
+                        @FormParam("Titolo")String titolo,
+                        @FormParam("Prezzo") String Prezzo){
+        final String QUERY = "SELECT * FROM Libri WHERE Autore=? AND Prezzo<?";
+        final List<Book> books = new ArrayList<>();
+        final String[] data = Database.getData();
+        try(
+
+                Connection conn = DriverManager.getConnection(data[0]);
+                PreparedStatement pstmt = conn.prepareStatement( QUERY )
+        ) {
+            pstmt.setString(1,autore);
+            pstmt.setString(2,Prezzo);
+            pstmt.execute();
+
+            ResultSet results =  pstmt.executeQuery();
+            while (results.next()){
+                Book book = new Book();
+                book.setTitolo(results.getString("Titolo"));
+                book.setAutore(results.getString("Autore"));
+                book.setISBN(results.getString("ISBN"));
+                book.setPrezzo(results.getString("Prezzo"));
+                
+                books.add(book);
+
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            String obj = new Gson().toJson(error);
+            return Response.serverError().entity(obj).build();
+        }
+        String obj = new Gson().toJson(books);
+        return Response.status(200).entity(obj).build();
     }
 }
